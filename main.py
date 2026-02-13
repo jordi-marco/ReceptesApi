@@ -108,12 +108,14 @@ def update_recepta(id: int, recepta: ReceptaCreate, db: Session = Depends(get_db
 def delete_recepta(id: int, db: Session = Depends(get_db)):
     stmt = delete(ReceptaDB).where(ReceptaDB.id == id).returning(ReceptaDB)
     resultat = db.execute(stmt)
-    recepta_esborrada = resultat.scalar_one_or_none()
+    recepta_db = resultat.scalar_one_or_none()
+
+    if not recepta_db:
+        raise HTTPException(status_code=404, detail="No s'ha trobat la recepta per esborrar")
+
+    recepta_esborrada = ReceptaResponse.model_validate(recepta_db)
     db.commit()
 
-    if not recepta_esborrada:
-        raise HTTPException(status_code=404, detail="No s'ha trobat la recepta per esborrar")
-    
     return recepta_esborrada
 
 # 6. Bonus: Fer Like (Increment atòmic)
