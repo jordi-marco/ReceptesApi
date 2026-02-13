@@ -86,14 +86,11 @@ def read_recepta(id: int, db: Session = Depends(get_db)):
 
 # 4. Actualitzar una recepta (PUT Atòmic)
 @app.put("/receptes/{id}", response_model=ReceptaResponse)
-def update_recepta(id: int, dades: ReceptaCreate, db: Session = Depends(get_db)):
-    valors = dades.model_dump()
-    valors["url_imatge"] = valors.pop("urlImatge")
-
+def update_recepta(id: int, recepta: ReceptaCreate, db: Session = Depends(get_db)):
     stmt = (
         update(ReceptaDB)
         .where(ReceptaDB.id == id)
-        .values(**valors)
+        .values(**recepta.model_dump())
         .returning(ReceptaDB)
     )
     
