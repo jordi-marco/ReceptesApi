@@ -1,11 +1,13 @@
 import os
 from typing import Optional
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import create_engine, Column, Integer, String, Text, ARRAY, update, delete, select
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 # --- CONFIGURACIÓ DE LA BASE DE DADES ---
+load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
@@ -53,18 +55,58 @@ def get_db():
     finally:
         db.close()
 
+# --- GESTOR DE WEBSOCKETS ---
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast_receptes(self, db: Session):
+        stmt = select(ReceptaDB)
+        receptes_db = db.execute(stmt).scalars().all()
+        receptes = [ReceptaResponse.model_validate(r).model_dump(by_alias=True) for r in receptes_db]
+        
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(receptes)
+            except:
+                pass
+
+manager = ConnectionManager()
+
 # --- INSTÀNCIA DE L'API ---
 app = FastAPI(title="API Receptes 1.0")
+
+# --- WEBSOCKET ENDPOINT FOR REAL-TIME UPDATES ---
+@app.websocket("/ws/receptes")
+async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
+    await manager.connect(websocket)
+    stmt = select(ReceptaDB)
+    receptes_db = db.execute(stmt).scalars().all()
+    receptes = [ReceptaResponse.model_validate(r).model_dump(by_alias=True) for r in receptes_db]
+    await websocket.send_json(receptes)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 # --- MÈTODES CRUD (Estil SQLAlchemy 2.0 Atòmic) ---
 
 # 1. Crear una recepta
 @app.post("/receptes", response_model=ReceptaResponse)
-def create_recepta(recepta: ReceptaCreate, db: Session = Depends(get_db)):
+async def create_recepta(recepta: ReceptaCreate, db: Session = Depends(get_db)):
     nova_recepta = ReceptaDB(**recepta.model_dump())
     db.add(nova_recepta)
     db.commit()
     db.refresh(nova_recepta)
+    await manager.broadcast_receptes(db)
     return nova_recepta
 
 # 2. Consultar totes les receptes (Usant select + execute)
@@ -86,7 +128,7 @@ def read_recepta(id: int, db: Session = Depends(get_db)):
 
 # 4. Actualitzar una recepta (PUT Atòmic)
 @app.put("/receptes/{id}", response_model=ReceptaResponse)
-def update_recepta(id: int, recepta: ReceptaCreate, db: Session = Depends(get_db)):
+async def update_recepta(id: int, recepta: ReceptaCreate, db: Session = Depends(get_db)):
     stmt = (
         update(ReceptaDB)
         .where(ReceptaDB.id == id)
@@ -101,11 +143,12 @@ def update_recepta(id: int, recepta: ReceptaCreate, db: Session = Depends(get_db
     if not recepta_actualitzada:
         raise HTTPException(status_code=404, detail="No existeix la recepta per actualitzar")
     
+    await manager.broadcast_receptes(db)
     return recepta_actualitzada
 
 # 5. Esborrar una recepta (DELETE Atòmic)
 @app.delete("/receptes/{id}", response_model=ReceptaResponse)
-def delete_recepta(id: int, db: Session = Depends(get_db)):
+async def delete_recepta(id: int, db: Session = Depends(get_db)):
     stmt = delete(ReceptaDB).where(ReceptaDB.id == id).returning(ReceptaDB)
     resultat = db.execute(stmt)
     recepta_db = resultat.scalar_one_or_none()
@@ -116,11 +159,12 @@ def delete_recepta(id: int, db: Session = Depends(get_db)):
     recepta_esborrada = ReceptaResponse.model_validate(recepta_db)
     db.commit()
 
+    await manager.broadcast_receptes(db)
     return recepta_esborrada
 
 # 6. Bonus: Fer Like (Increment atòmic)
 @app.post("/receptes/{id}/like", response_model=ReceptaResponse)
-def fer_like(id: int, db: Session = Depends(get_db)):
+async def fer_like(id: int, db: Session = Depends(get_db)):
     stmt = (
         update(ReceptaDB)
         .where(ReceptaDB.id == id)
@@ -134,4 +178,5 @@ def fer_like(id: int, db: Session = Depends(get_db)):
     if not recepta_actualitzada:
         raise HTTPException(status_code=404, detail="Recepta no trobada")
     
+    await manager.broadcast_receptes(db)
     return recepta_actualitzada

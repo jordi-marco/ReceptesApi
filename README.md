@@ -27,8 +27,8 @@ L'arquitectura és modular per facilitar l'escalabilitat:
 
 1. **Clona el repositori:**
    ```bash
-   git clone [https://github.com/el-teu-usuari/receptes-backend.git](https://github.com/el-teu-usuari/receptes-backend.git)
-   cd receptes-backend
+   git clone https://github.com/jordi-marco/ReceptesApi
+   cd ReceptesApi
 
 2. **Crea un entorn virtual i actival:**
    ```bash
