@@ -2,7 +2,7 @@
 
 [![Deploy on Railway](https://img.shields.io/badge/Railway-Deployed-blueviolet?style=for-the-badge&logo=railway)](https://la-teva-app.up.railway.app/docs)
 
-> **🌐 URL en viu:** [https://la-teva-app.up.railway.app/docs](https://la-teva-app.up.railway.app/docs)
+> **🌐 URL en viu:** [https://receptesapi-production.up.railway.app/docs](https://receptesapi-production.up.railway.app/docs)
 
 Aquesta és una API REST i WebSocket construïda amb **FastAPI** per gestionar una aplicació de receptes de cuina.
 
