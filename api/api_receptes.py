@@ -27,9 +27,13 @@ async def websocket_endpoint(websocket: WebSocket):
 @router.post("/receptes", response_model=ReceptaResponse)
 async def create_recepta(recepta: ReceptaCreate):
     recepta_creada = receptes_data_service.create_recepta(recepta)
-    # await manager.broadcast_receptes(db)
     if not recepta_creada:
         raise HTTPException(status_code=404, detail="No s'ha pugut crear la recepta")
+
+    receptes = receptes_data_service.read_receptes()
+    receptes_response = [ReceptaResponse.model_validate(r) for r in receptes]
+    await receptes_connection_manager.broadcast(receptes_response)
+
     return recepta_creada
 
 # 2. Consultar totes les receptes
@@ -52,7 +56,10 @@ async def update_recepta(id: int, recepta: ReceptaCreate):
     recepta_actualitzada = receptes_data_service.update_recepta(id, recepta)
     if not recepta_actualitzada:
         raise HTTPException(status_code=404, detail="No existeix la recepta per actualitzar")   
-    # await manager.broadcast_receptes(db)
+ 
+    receptes = receptes_data_service.read_receptes()
+    receptes_response = [ReceptaResponse.model_validate(r) for r in receptes]
+    await receptes_connection_manager.broadcast(receptes_response)
     return recepta_actualitzada
 
 # 5. Esborrar una recepta (DELETE Atòmic)
@@ -62,7 +69,10 @@ async def delete_recepta(id: int):
     if not recepta_db:
         raise HTTPException(status_code=404, detail="No s'ha trobat la recepta per esborrar")
     recepta_esborrada = ReceptaResponse.model_validate(recepta_db)
-    # await manager.broadcast_receptes(db)
+    
+    receptes = receptes_data_service.read_receptes()
+    receptes_response = [ReceptaResponse.model_validate(r) for r in receptes]
+    await receptes_connection_manager.broadcast(receptes_response)
     return recepta_esborrada
 
 # 6. Bonus: Fer Like (Increment atòmic)
@@ -71,5 +81,8 @@ async def fer_like(id: int):
     recepta_actualitzada = receptes_data_service.incrementar_likes(id)
     if not recepta_actualitzada:
         raise HTTPException(status_code=404, detail="Recepta no trobada")   
-    # await manager.broadcast_receptes(db)
+    
+    receptes = receptes_data_service.read_receptes()
+    receptes_response = [ReceptaResponse.model_validate(r) for r in receptes]
+    await receptes_connection_manager.broadcast(receptes_response)
     return recepta_actualitzada
