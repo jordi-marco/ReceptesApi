@@ -52,7 +52,7 @@ class ReceptesDataService:
  
     def read_receptes(self) -> List[ReceptaDB]:
         with self._get_session() as session:
-            stmt = select(ReceptaDB)
+            stmt = select(ReceptaDB).order_by(ReceptaDB.id)
             return session.execute(stmt).scalars().all()
  
     def read_recepta(self, id: int) -> Optional[ReceptaDB]:
