@@ -7,12 +7,12 @@ from typing import Optional, List
 from models.recepta import ReceptaDB
 from schemas.recepta import ReceptaCreate, ReceptaResponse
 
-class DataService:
+class ReceptesDataService:
     _instance = None
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(DataService, cls).__new__(cls)
+            cls._instance = super(ReceptesDataService, cls).__new__(cls)
             load_dotenv()
             db_url = os.getenv("DATABASE_URL")
             # El motor (engine) gestiona el pool de connexions automàticament
@@ -84,3 +84,14 @@ class DataService:
             session.commit()
             return recepta_eliminada.scalar_one_or_none()
             
+    def incrementar_likes(self, id: int) -> Optional[ReceptaDB]:
+        with self._get_session() as session:
+            stmt = (
+                update(ReceptaDB)
+                .where(ReceptaDB.id == id)
+                .values(likes=ReceptaDB.likes + 1)
+                .returning(ReceptaDB)
+            )
+            recepta_actualitzada = session.execute(stmt)
+            session.commit()
+            return recepta_actualitzada.scalar_one_or_none()
