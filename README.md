@@ -86,7 +86,7 @@ L'arquitectura és modular per facilitar l'escalabilitat:
 
 6. **Comprovar el funcionament:**
 
-   🌐 URL:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+   🌐 URL: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
@@ -137,6 +137,10 @@ Aquest mètode utilitza **Docker Compose** per aixecar l'API i la base de dades 
    ```
 
    L'API estarà disponible internament al port 8000.
+
+4. **Comprovar el funcionament:**
+
+   🌐 URL: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### Opció B: Desplegament natiu (Sense Docker)
 
@@ -195,6 +199,10 @@ Si el servidor no disposa de Docker, segueix aquests passos:
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
 
+6. **Comprovar el funcionament:**
+
+   🌐 URL: [http://localhost:8000/docs](http://localhost:8000/docs)
+
 ## 🛠️ Notes per a l'Administrador del Servidor
 
 * **Reverse Proxy:** L'API està configurada per escoltar al port **8000**. Es recomana l'ús d'un proxy invers (com Nginx o Traefik) per gestionar la terminació TLS/SSL (HTTPS) i dirigir el tràfic al subdomini corresponent.
@@ -207,11 +215,12 @@ Si el servidor no disposa de Docker, segueix aquests passos:
 
 | Mètode | Ruta | Descripció |
 | :--- | :--- | :--- |
-| **GET** | `/receptes/` | Obté la llista de totes les receptes. |
 | **POST** | `/receptes/` | Crea una nova recepta. |
+| **GET** | `/receptes/` | Obté la llista de totes les receptes. |
+| **GET** | `/receptes/{id}` | Obté una recepta existent. |
 | **PUT** | `/receptes/{id}` | Actualitza una recepta existent. |
-| **PUT** | `/receptes/{id}/like` | Incrementa el comptador de likes. |
 | **DELETE** | `/receptes/{id}` | Elimina una recepta i en retorna les dades. |
+| **POST** | `/receptes/{id}/like` | Incrementa el comptador de likes. |
 
 ---
 
