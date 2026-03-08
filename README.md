@@ -1,8 +1,10 @@
 # 🍳 Receptes API (Backend)
 
+<!-- 
 [![Deploy on Railway](https://img.shields.io/badge/Railway-Deployed-blueviolet?style=for-the-badge&logo=railway)](https://la-teva-app.up.railway.app/docs)
 
 > **🌐 URL en viu:** [https://receptesapi-production.up.railway.app/docs](https://receptesapi-production.up.railway.app/docs)
+-->
 
 Aquesta és una API REST i WebSocket construïda amb **FastAPI** per gestionar una aplicació de receptes de cuina.
 
@@ -13,7 +15,7 @@ Aquesta és una API REST i WebSocket construïda amb **FastAPI** per gestionar u
 * **PostgreSQL**: Base de dades relacional.
 * **Pydantic**: Validació de dades i ús d'àlies (camelCase per al frontend).
 * **WebSockets**: Actualitzacions en temps real per a l'app.
-* **Railway**: Plataforma de desplegament (Cloud).
+<!-- * **Railway**: Plataforma de desplegament (Cloud). -->
 
 ---
 
@@ -24,39 +26,180 @@ L'arquitectura és modular per facilitar l'escalabilitat:
 * `api/`: Rutes i lògica dels endpoints.
 * `core/`: Gestor de WebSockets.
 * `models/`: Models de taules de SQLAlchemy.
-* `services/`: Serveis de dades, que obenen les dades de la Base de Dades.
+* `services/`: Serveis de dades, que obtenen les dades de la Base de Dades.
 * `schemas/`: Esquemes de validació de Pydantic.
 
 ---
 
 ## 📦 Instal·lació i ús local
 
-1. **Clona el repositori:**
+1. **Clonar el repositori:**
 
    ```bash
    git clone https://github.com/jordi-marco/ReceptesApi
    cd ReceptesApi
+   ```
 
-2. **Crea un entorn virtual i actival:**
+2. **Crear un entorn virtual i activar-ho:**
 
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # A Windows: .venv\Scripts\activate
+   ```
 
-3. **Instal·la les dependencies:**
+3. **Instal·lar les dependencies:**
 
    ```bash
    pip install -r requirements.txt
+   ```
 
-4. **Configura les variables d'entorn: Crea un fitxer .env a l'arrel amb la teva URL de Postgres:**
+4. **Configurar les variables d'entorn:**
 
-   ```bash
-   DATABASE_URL=postgresql+psycopg://usuari:password@host:port/database
-
-5. **Executa l'API:**
+   Crear un fitxer `.env` a l'arrel del projecte basant-se en el fitxer `.env.example`. En aquest cas, la `DB_HOST` haurà d'apuntar al host on estigui el PostgreSQL (normalment localhost). Modificar les variables amb els valors de la ip del host de la base de dades (localhost si és local) i les seves credencials:
 
    ```bash
-   fastapi dev main.py  
+   # Exemple de fitxer .env per a la configuració de la base de dades
+   # Aquest fitxer ha de ser renombrat a .env i editat amb els valors 
+   # de la ip del host de la base de dades i les seves credencials
+
+   # Fer servir 
+   #    'db': per a Docker (db és el nom del servei de la base de dades al docker-compose)
+   #    'localhost': per a base de dades local
+   #    ip de la màquina on està la base de dades: per a base de dades remota
+   DB_HOST= db | localhost | ip_address
+   DB_PORT=5432
+
+   # Credencials de la base de dades
+   DB_USER=user
+   DB_PASSWORD=userpassword
+   DB_NAME=databasename
+
+   # URL de connexió construïda amb les variables anteriors
+   DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+   ```
+
+5. **Executar l'API:**
+
+   ```bash
+   fastapi dev main.py 
+   ```
+
+6. **Comprovar el funcionament:**
+
+   🌐 URL:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+## 📦 Instruccions de Desplegament a un servidor
+
+### Opció A: Desplegament amb Docker (Recomanat)
+
+Aquest mètode utilitza **Docker Compose** per aixecar l'API i la base de dades en contenidors aïllats.
+
+1. **Clonar el repositori:**
+
+   ```bash
+   git clone https://github.com/jordi-marco/ReceptesApi
+   cd ReceptesApi
+   ```
+
+2. **Configurar les variables d'entorn:**
+
+   Crea un fitxer `.env` a l'arrel del projecte basant-se en el fitxer `.env.example`. En aquest cas, utilitzar `db` com a valor de la variable `DB_HOST`. Modificar els valors de les credencials:
+
+   ```bash
+   # Exemple de fitxer .env per a la configuració de la base de dades
+   # Aquest fitxer ha de ser renombrat a .env i editat amb els valors 
+   # de la ip del host de la base de dades i les seves credencials
+
+   # Fer servir 
+   #    'db': per a Docker (db és el nom del servei de la base de dades al docker-compose)
+   #    'localhost': per a base de dades local
+   #    ip de la màquina on està la base de dades: per a base de dades remota
+   DB_HOST=db
+   DB_PORT=5432
+
+   # Credencials de la base de dades
+   DB_USER=user
+   DB_PASSWORD=userpassword
+   DB_NAME=databasename
+
+   # URL de connexió construïda amb les variables anteriors
+   DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+   ```
+
+3. **Executar:**
+
+   Un cop configurat el fitxer .env, executa la següent comanda:
+
+   ``` bash
+   docker-compose up -d --build
+   ```
+
+   L'API estarà disponible internament al port 8000.
+
+### Opció B: Desplegament natiu (Sense Docker)
+
+Si el servidor no disposa de Docker, segueix aquests passos:
+
+1. **Clonar el repositori:**
+
+   ```bash
+   git clone https://github.com/jordi-marco/ReceptesApi
+   cd ReceptesApi
+   ```
+
+2. **Crear un entorn virtual i activar-ho:**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # A Windows: .venv\Scripts\activate
+   ```
+
+3. **Instal·lar les dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configurar les variables d'entorn:**
+
+   Crear un fitxer `.env` a l'arrel del projecte basant-se en el fitxer `.env.example`. En aquest cas, la `DB_HOST` haurà d'apuntar al host on estigui el PostgreSQL (normalment localhost). Modificar les variables amb els valors de la ip del host de la base de dades (localhost si és local) i les seves credencials:
+
+   ```bash
+   # Exemple de fitxer .env per a la configuració de la base de dades
+   # Aquest fitxer ha de ser renombrat a .env i editat amb els valors 
+   # de la ip del host de la base de dades i les seves credencials
+
+   # Fer servir 
+   #    'db': per a Docker (db és el nom del servei de la base de dades al docker-compose)
+   #    'localhost': per a base de dades local
+   #    ip de la màquina on està la base de dades: per a base de dades remota
+   DB_HOST= db | localhost | ip_address
+   DB_PORT=5432
+
+   # Credencials de la base de dades
+   DB_USER=user
+   DB_PASSWORD=userpassword
+   DB_NAME=databasename
+
+   # URL de connexió construïda amb les variables anteriors
+   DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+   ```
+
+5. **Execució del servidor**
+
+   Executa l'API utilitzant Uvicorn:
+
+   ```bash
+   uvicorn main:app --host 0.0.0.0 --port 8000
+   ```
+
+## 🛠️ Notes per a l'Administrador del Servidor
+
+* **Reverse Proxy:** L'API està configurada per escoltar al port **8000**. Es recomana l'ús d'un proxy invers (com Nginx o Traefik) per gestionar la terminació TLS/SSL (HTTPS) i dirigir el tràfic al subdomini corresponent.
+* **Seguretat:** El fitxer `.env` real ha de ser generat al servidor. Les credencials de la base de dades es poden triar lliurement; l'aplicació les llegirà mitjançant les variables d'entorn definides.
+* **Persistència:** Si s'utilitza Docker, s'ha definit un volum anomenat `postgres_data` al fitxer `docker-compose.yml` per assegurar que les dades no es perdin en reiniciar els contenidors.
 
 ---
 
@@ -119,3 +262,4 @@ En qualsevol canvi, els clients reben el llistat sencer d'objectes:
       "urlImatge": null
    }
   ]
+  ```
